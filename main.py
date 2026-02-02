@@ -1,3 +1,13 @@
+@app.route('/auth/google')
+def auth_google():
+    print(f"DEBUG: CLIENT_ID={CLIENT_ID}")
+    print(f"DEBUG: REDIRECT_URI={REDIRECT_URI}")
+    print(f"DEBUG: SCOPES={SCOPES}")
+    
+    user_id = request.args.get('user_id', 'unknown')
+    chat_id = request.args.get('chat_id', '')
+    
+    # остальной код..
 from flask import Flask, request, redirect, jsonify
 from flask_cors import CORS
 import os
