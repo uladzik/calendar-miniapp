@@ -9,7 +9,7 @@ CORS(app)
 # Получаем из environment variables Railway
 CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
-REDIRECT_URI = os.getenv('REDIRECT_URI')  # https://2-production-9efb.up.railway.app/auth/google/callback
+REDIRECT_URI = os.getenv('https://2-production-9efb.up.railway.app/auth/google/callback')  # https://2-production-9efb.up.railway.app/auth/google/callback
 
 # Scopes для Google Calendar
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email openid'
