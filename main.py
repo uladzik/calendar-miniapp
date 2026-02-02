@@ -13,6 +13,11 @@ CLIENT_ID = os.getenv('CLIENT_ID', '611341589784-n8pl0gjb2jjj67d7k0eg32al0092vtm
 CLIENT_SECRET = os.getenv('CLIENT_SECRET', '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')
 REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://2-production-9efb.up.railway.app/auth/google/callback')
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email openid'
+@app.route('/')
+@app.route('/health')
+def health():
+    return 'OK', 200
+
 
 @app.route('/auth/google')
 def auth_google():
