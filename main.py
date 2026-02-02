@@ -5,7 +5,9 @@ import requests
 
 app = Flask(__name__)
 CORS(app)
-
+@app.route('/')
+def health():
+    return 'OK', 200
 # Твои creds (замени на реальные)
 CLIENT_ID = os.getenv('CLIENT_ID', '611341589784-n8pl0gjb2jjj67d7k0eg32al0092vtmn.apps.googleusercontent.com')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET', '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')
