@@ -12,7 +12,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # ← ДОБАВЬ ЭТО!
 CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '611341589784-n8pl0gjb2jjj67d7k0eg32al0092vtmn.apps.googleusercontent.com')
 CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '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_ПОЛНЫЙ')  # Railway var!
 REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://2-production-9efb.up.railway.app/auth/google/callback')
-SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email openid'  # Чистый!
+SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email openid'
 
 
 
