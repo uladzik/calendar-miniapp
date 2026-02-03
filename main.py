@@ -8,7 +8,7 @@ CORS(app)
 
 CLIENT_ID = '611341589784-shq8uft9k868743ejp1vcb484vejsb6f.apps.googleusercontent.com'
 CLIENT_SECRET = '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'  
-REDIRECT_URI = 'https://2-production-9efb.up.railway.app/auth/google/callback'
+REDIRECT_URI = 'https://calendar-miniapp-production.up.railway.app'
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email openid'
 
 
