@@ -7,10 +7,11 @@ app = Flask(__name__)
 CORS(app)
 
 # ХАРДКОД — ТВОЙ НОВЫЙ CLIENT
-CLIENT_ID = '611341589784-shq8uft9k868743ejp1vcb484vejsb6f.apps.googleusercontent.com'
+CLIENT_ID = '611341589784-shq8uft
 CLIENT_SECRET = 'GOCSPX-твой_секрет_Web_client_2'  # ← Обязательно замени!
 REDIRECT_URI = 'https://2-production-9efb.up.railway.app/auth/google/callback'
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email openid'
+
 
 print(f"DEBUG: CLIENT_ID={CLIENT_ID}")  # Лог для проверки
 print(f"DEBUG: REDIRECT_URI={REDIRECT_URI}")
