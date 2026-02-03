@@ -16,6 +16,16 @@ SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/au
 print(f"DEBUG: CLIENT_ID={CLIENT_ID}")  # Лог для проверки
 print(f"DEBUG: REDIRECT_URI={REDIRECT_URI}")
 
+@app.route('/debug')
+def debug():
+    return f'''
+    <h1>DEBUG</h1>
+    <p>CLIENT_ID: {CLIENT_ID}</p>
+    <p>CLIENT_SECRET len: {len(CLIENT_SECRET)}</p>
+    <p>REDIRECT_URI: {REDIRECT_URI}</p>
+    <p>SCOPES: {SCOPES}</p>
+    '''
+
 @app.route('/')
 @app.route('/health')
 def health():
