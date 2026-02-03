@@ -6,9 +6,8 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-# ТВОИ НОВЫЕ CREDS (хардкод)
 CLIENT_ID = '611341589784-shq8uft9k868743ejp1vcb484vejsb6f.apps.googleusercontent.com'
-CLIENT_SECRET = 'GOCSPX-скопируй_секрет_из_Web_client_2'  # Console → Web client 2
+CLIENT_SECRET = 'GOCSPX-скопируй_из_Web_client_2'
 REDIRECT_URI = 'https://2-production-9efb.up.railway.app/auth/google/callback'
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email openid'
 
