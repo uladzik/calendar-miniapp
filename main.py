@@ -6,15 +6,16 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-import os
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # ← ДОБАВЬ ЭТО!
-
-CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '611341589784-n8pl0gjb2jjj67d7k0eg32al0092vtmn.apps.googleusercontent.com')
-CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '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_ПОЛНЫЙ')  # Railway var!
-REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://2-production-9efb.up.railway.app/auth/google/callback')
+# ТВОИ НОВЫЕ CREDS (хардкод)
+CLIENT_ID = '611341589784-shq8uft9k868743ejp1vcb484vejsb6f.apps.googleusercontent.com'
+CLIENT_SECRET = 'GOCSPX-скопируй_секрет_из_Web_client_2'  # Console → Web client 2
+REDIRECT_URI = 'https://2-production-9efb.up.railway.app/auth/google/callback'
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email openid'
 
-
+@app.route('/')
+@app.route('/health')
+def health():
+    return 'OK', 200
 
 @app.route('/auth/google')
 def auth_google():
@@ -40,13 +41,13 @@ def auth_callback():
         token_json = token_response.json()
         return f'''
         <html><body>
-        <h1>Авторизация успешна!</h1>
+        <h1>✅ Авторизация успешна!</h1>
         <p>Token: {token_json}</p>
         <p>State: {state}</p>
-        <script>setTimeout(() => {{window.close()}}, 2000);</script>
+        <script>setTimeout(() => {{window.close()}}, 3000);</script>
         </body></html>
         '''
-    return 'Ошибка авторизации', 400
+    return '❌ Ошибка авторизации', 400
 
 @app.route('/save_meetings', methods=['POST'])
 def save_meetings():
