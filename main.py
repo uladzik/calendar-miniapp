@@ -6,9 +6,9 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-CLIENT_ID = '611341589784-shq8uft9k868743ejp1vcb484vejsb6f.apps.googleusercontent.com'
-CLIENT_SECRET = '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'  
-REDIRECT_URI = 'https://calendar-miniapp-production.up.railway.app'
+CLIENT_ID = '611341589784-rq5808l4jp6ro59d5qnt5dc1aat4vsdv.apps.googleusercontent.com'
+CLIENT_SECRET = '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'  
+REDIRECT_URI = 'https://calendar-miniapp.onrender.com/auth/google/callback'
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email openid'
 
 
