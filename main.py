@@ -7,10 +7,9 @@ app = Flask(__name__)
 CORS(app)
 
 CLIENT_ID = '611341589784-rq5808l4jp6ro59d5qnt5dc1aat4vsdv.apps.googleusercontent.com'
-CLIENT_SECRET = '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'  
+CLIENT_SECRET = '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'
 REDIRECT_URI = 'https://calendar-miniapp.onrender.com/auth/google/callback'
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email openid'
-
 
 @app.route('/debug')
 def debug():
@@ -31,7 +30,7 @@ def health():
 def auth_google():
     user_id = request.args.get('user_id', 'test')
     chat_id = request.args.get('chat_id', 'test')
-    auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={SCOPES}&response_type=code&state={user_id}|{chat_id}"
+    auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={SCOPES}&response_type=code&state={user_id}|{chat_id}&access_type=offline&prompt=consent"
     print(f"DEBUG auth_url={auth_url[:200]}...")
     return redirect(auth_url)
 
