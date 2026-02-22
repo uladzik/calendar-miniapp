@@ -19,6 +19,7 @@
       --success-soft: #d1fae5;
       --warning: #f59e0b;
       --warning-soft: #fef3c7;
+      --google: #4285f4;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif; }
     body { background: var(--bg); color: var(--text-main); -webkit-font-smoothing: antialiased; }
@@ -105,17 +106,22 @@
     .empty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px; }
     .empty-icon { font-size: 48px; margin-bottom: 12px; }
     .meeting-card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); }
+    .meeting-card.google { border-left: 4px solid var(--google); }
     .meeting-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
     .meeting-attendee { font-size: 13px; color: var(--text-muted); }
     .meeting-time { display: flex; align-items: center; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
     .pill { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
     .pill-scheduled { background: var(--primary-soft); color: var(--primary); }
+    .pill-google { background: #e8f0fe; color: var(--google); }
     .pill-completed { background: var(--success-soft); color: var(--success); }
     .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .loading-dark { border-color: var(--primary); border-top-color: transparent; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; font-size: 14px; z-index: 100; display: none; }
     .toast.show { display: block; animation: fadeIn 0.3s; }
     @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    .sync-btn { background: none; border: none; color: var(--primary); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 4px; }
   </style>
 </head>
 <body>
@@ -179,13 +185,21 @@
     </div>
 
     <div style="margin-top:8px;">
-      <div style="font-size:16px;font-weight:600;margin-bottom:12px;padding:0 4px;">📋 Upcoming</div>
+      <div class="section-header">
+        <div style="font-size:16px;font-weight:600;">📋 Upcoming</div>
+        <button class="sync-btn" onclick="syncGoogleEvents()" id="sync-btn">
+          🔄 Sync
+        </button>
+      </div>
       <div id="home-meetings"></div>
     </div>
   </section>
 
   <section id="screen-meetings" class="screen">
-    <div style="font-size:18px;font-weight:700;margin-bottom:16px;">All Meetings</div>
+    <div class="section-header">
+      <div style="font-size:18px;font-weight:700;">All Meetings</div>
+      <button class="sync-btn" onclick="syncGoogleEvents()">🔄 Sync</button>
+    </div>
     <div id="list-meetings"></div>
   </section>
 
@@ -267,6 +281,9 @@
   if (tg) { tg.expand(); tg.ready(); }
 
   const API_URL = 'https://calendar-miniapp.onrender.com';
+  
+  // Хранилище событий Google Calendar
+  let googleEvents = [];
 
   function getUserId() {
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -292,6 +309,7 @@
     const connected = localStorage.getItem('google_connected') === 'true';
     document.getElementById('google-connect-card').style.display = connected ? 'none' : 'block';
     document.getElementById('google-connected-card').style.display = connected ? 'block' : 'none';
+    return connected;
   }
 
   function connectGoogleCalendar() {
@@ -305,13 +323,73 @@
     }
     
     localStorage.setItem('google_connected', 'true');
-    setTimeout(checkGoogleConnection, 1000);
+    setTimeout(() => {
+      checkGoogleConnection();
+      syncGoogleEvents();
+    }, 2000);
   }
 
   function disconnectGoogle() {
     localStorage.removeItem('google_connected');
+    googleEvents = [];
     checkGoogleConnection();
+    renderHome();
     showToast('Google Calendar disconnected');
+  }
+
+  // Синхронизация с Google Calendar
+  async function syncGoogleEvents() {
+    if (!checkGoogleConnection()) {
+      showToast('Connect Google Calendar first');
+      return;
+    }
+
+    const syncBtn = document.getElementById('sync-btn');
+    if (syncBtn) {
+      syncBtn.innerHTML = '<span class="loading loading-dark"></span> Syncing...';
+      syncBtn.disabled = true;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/get_events?user_id=${getUserId()}`);
+      const data = await response.json();
+
+      if (response.status === 401) {
+        localStorage.removeItem('google_connected');
+        checkGoogleConnection();
+        showToast('Please reconnect Google Calendar');
+        googleEvents = [];
+      } else if (data.events) {
+        googleEvents = data.events.map(e => ({
+          id: e.id,
+          title: e.summary || 'No title',
+          datetime: e.start?.dateTime || e.start?.date,
+          duration: calculateDuration(e.start, e.end),
+          attendee: e.attendees?.[0]?.email || '',
+          status: 'google',
+          htmlLink: e.htmlLink
+        }));
+        showToast(`✅ Synced ${googleEvents.length} events`);
+      }
+    } catch (e) {
+      console.error('Sync error:', e);
+      showToast('Sync failed. Try again.');
+    }
+
+    if (syncBtn) {
+      syncBtn.innerHTML = '🔄 Sync';
+      syncBtn.disabled = false;
+    }
+
+    renderHome();
+    renderMeetings();
+  }
+
+  function calculateDuration(start, end) {
+    if (!start?.dateTime || !end?.dateTime) return 60;
+    const startDate = new Date(start.dateTime);
+    const endDate = new Date(end.dateTime);
+    return Math.round((endDate - startDate) / 60000);
   }
 
   // Meetings
@@ -322,6 +400,13 @@
 
   function saveMeetings(list) {
     localStorage.setItem('meetings', JSON.stringify(list));
+  }
+
+  function getAllMeetings() {
+    const local = loadMeetings();
+    // Объединяем локальные и Google события
+    const all = [...local, ...googleEvents];
+    return all;
   }
 
   // Navigation
@@ -477,12 +562,6 @@
       datetime: `${selectedDate}T${selectedTime}:00`
     };
 
-    // Сохраняем локально
-    const list = loadMeetings();
-    const localMeeting = { id: Date.now(), ...meetingData, status: 'scheduled' };
-    list.push(localMeeting);
-    saveMeetings(list);
-
     // Отправляем в Google Calendar
     if (localStorage.getItem('google_connected') === 'true') {
       try {
@@ -495,6 +574,8 @@
         
         if (result.success) {
           showToast('✅ Added to Google Calendar!');
+          // Синхронизируем чтобы получить новое событие
+          await syncGoogleEvents();
         } else if (result.error) {
           console.error('Google Calendar error:', result.error);
           if (response.status === 401) {
@@ -502,15 +583,19 @@
             checkGoogleConnection();
             showToast('Please reconnect Google Calendar');
           } else {
+            // Сохраняем локально если Google не работает
+            saveLocalMeeting(meetingData);
             showToast('Saved locally (Google sync failed)');
           }
         }
       } catch (e) {
         console.error('Network error:', e);
+        saveLocalMeeting(meetingData);
         showToast('Saved locally (offline)');
       }
     } else {
-      showToast('✅ Meeting created!');
+      saveLocalMeeting(meetingData);
+      showToast('✅ Meeting created locally!');
     }
 
     // Reset form
@@ -525,10 +610,16 @@
     switchScreen('home');
   }
 
+  function saveLocalMeeting(meetingData) {
+    const list = loadMeetings();
+    list.push({ id: Date.now(), ...meetingData, status: 'scheduled' });
+    saveMeetings(list);
+  }
+
   // Render screens
   function renderHome() {
     checkGoogleConnection();
-    const list = loadMeetings();
+    const all = getAllMeetings();
     const today = new Date();
     
     document.getElementById('home-date').textContent = today.toLocaleDateString(undefined, {
@@ -538,7 +629,7 @@
     let todayCount = 0, upcomingCount = 0, completedCount = 0;
     const now = new Date();
     
-    list.forEach(m => {
+    all.forEach(m => {
       const d = new Date(m.datetime);
       if (m.status === 'completed') completedCount++;
       else if (d.toDateString() === now.toDateString()) todayCount++;
@@ -552,10 +643,10 @@
     const cont = document.getElementById('home-meetings');
     cont.innerHTML = '';
     
-    const upcoming = list
+    const upcoming = all
       .filter(m => new Date(m.datetime) >= now && m.status !== 'completed')
       .sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
-      .slice(0, 5);
+      .slice(0, 10);
 
     if (upcoming.length === 0) {
       cont.innerHTML = `
@@ -572,22 +663,33 @@
   }
 
   function renderMeetings() {
-    const list = loadMeetings().sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+    const all = getAllMeetings().sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
     const cont = document.getElementById('list-meetings');
     cont.innerHTML = '';
     
-    if (list.length === 0) {
+    if (all.length === 0) {
       cont.innerHTML = '<div class="card empty"><div class="empty-icon">📋</div><div>No meetings yet</div></div>';
       return;
     }
     
-    list.forEach(m => cont.appendChild(createMeetingCard(m, true)));
+    all.forEach(m => cont.appendChild(createMeetingCard(m, true)));
   }
 
   function createMeetingCard(m, withActions = false) {
     const d = new Date(m.datetime);
+    const isGoogle = m.status === 'google';
     const card = document.createElement('div');
-    card.className = 'meeting-card';
+    card.className = 'meeting-card' + (isGoogle ? ' google' : '');
+    
+    let pillClass = 'pill-scheduled';
+    let pillText = '📅 Scheduled';
+    if (m.status === 'completed') {
+      pillClass = 'pill-completed';
+      pillText = '✓ Done';
+    } else if (isGoogle) {
+      pillClass = 'pill-google';
+      pillText = '📅 Google';
+    }
     
     card.innerHTML = `
       <div class="row">
@@ -595,20 +697,18 @@
           <div class="meeting-title">${m.title}</div>
           ${m.attendee ? `<div class="meeting-attendee">with ${m.attendee}</div>` : ''}
         </div>
-        <span class="pill ${m.status === 'completed' ? 'pill-completed' : 'pill-scheduled'}">
-          ${m.status === 'completed' ? '✓ Done' : '📅 Scheduled'}
-        </span>
+        <span class="pill ${pillClass}">${pillText}</span>
       </div>
       <div class="meeting-time">
         <span>🗓 ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
         <span>·</span>
         <span>🕐 ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
         <span>·</span>
-        <span>⏱ ${m.duration}min</span>
+        <span>⏱ ${m.duration || 30}min</span>
       </div>
     `;
     
-    if (withActions) {
+    if (withActions && !isGoogle) {
       const actions = document.createElement('div');
       actions.style.cssText = 'display:flex;gap:8px;margin-top:12px;';
       
@@ -636,11 +736,26 @@
       card.appendChild(actions);
     }
     
+    // Ссылка на Google Calendar для Google событий
+    if (isGoogle && m.htmlLink) {
+      const link = document.createElement('a');
+      link.href = m.htmlLink;
+      link.target = '_blank';
+      link.style.cssText = 'display:block;margin-top:12px;font-size:12px;color:var(--google);text-decoration:none;';
+      link.textContent = '↗ Open in Google Calendar';
+      card.appendChild(link);
+    }
+    
     return card;
   }
 
   // Init
   renderHome();
+  
+  // Автосинхронизация при загрузке если подключен Google
+  if (localStorage.getItem('google_connected') === 'true') {
+    setTimeout(syncGoogleEvents, 1000);
+  }
 </script>
 </body>
 </html>
