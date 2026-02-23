@@ -2,760 +2,1565 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>CalendarBot – Mini App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CalendarBot 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f0f4f8;
-      --card: #ffffff;
-      --primary: #6366f1;
-      --primary-light: #818cf8;
-      --primary-soft: #e0e7ff;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-glass: rgba(255, 255, 255, 0.7);
+      --bg-glass-strong: rgba(255, 255, 255, 0.9);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --accent-soft: rgba(99, 102, 241, 0.1);
       --success: #10b981;
-      --success-soft: #d1fae5;
+      --success-soft: rgba(16, 185, 129, 0.1);
       --warning: #f59e0b;
-      --warning-soft: #fef3c7;
-      --google: #4285f4;
+      --warning-soft: rgba(245, 158, 11, 0.1);
+      --error: #ef4444;
+      --border: rgba(0, 0, 0, 0.06);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.12);
+      --blur: 20px;
+      --radius-sm: 12px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --radius-xl: 32px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif; }
-    body { background: var(--bg); color: var(--text-main); -webkit-font-smoothing: antialiased; }
-    .app { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
-    .app-header {
-      padding: 20px 20px 12px;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-      color: white;
-      border-radius: 0 0 24px 24px;
-      margin-bottom: 16px;
+
+    [data-theme="dark"] {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-glass: rgba(30, 41, 59, 0.8);
+      --bg-glass-strong: rgba(30, 41, 59, 0.95);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #64748b;
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.4);
     }
-    .app-title { font-weight: 700; font-size: 24px; }
-    .app-subtitle { font-size: 13px; opacity: 0.85; margin-top: 4px; }
-    .screen { display: none; padding: 0 16px 16px; }
-    .screen.active { display: block; }
-    .card {
-      background: var(--card);
-      border-radius: 20px;
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    .bg-gradient {
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 40% 60%, rgba(245, 158, 11, 0.08) 0%, transparent 30%);
+      animation: gradientMove 20s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes gradientMove {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(2%, 2%) rotate(5deg); }
+      66% { transform: translate(-2%, 1%) rotate(-5deg); }
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding-bottom: 100px;
+      position: relative;
+    }
+
+    /* Header */
+    .header {
       padding: 20px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .row { display: flex; align-items: center; justify-content: space-between; }
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 14px 20px; border-radius: 14px; border: none; font-size: 15px; font-weight: 600;
-      cursor: pointer; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-      color: #fff; width: 100%; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary-soft); box-shadow: none; }
-    .btn-sm { padding: 10px 16px; font-size: 13px; border-radius: 10px; }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
-    .stat-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 16px; padding: 16px 12px; text-align: center; }
-    .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 18px; }
-    .stat-icon.today { background: var(--warning-soft); }
-    .stat-icon.upcoming { background: var(--primary-soft); }
-    .stat-icon.completed { background: var(--success-soft); }
-    .stat-label { color: var(--text-muted); font-size: 11px; font-weight: 500; }
-    .stat-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .logo-text {
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--bg-glass);
+      backdrop-filter: blur(var(--blur));
+      color: var(--text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Glass Card */
+    .glass-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(var(--blur));
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 20px;
+      margin: 0 16px 16px;
+      box-shadow: var(--shadow-md);
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.5s ease;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 0 16px 16px;
+    }
+
+    .quick-action {
+      background: var(--bg-glass);
+      backdrop-filter: blur(var(--blur));
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: fadeInUp 0.5s ease;
+    }
+
+    .quick-action:nth-child(2) { animation-delay: 0.1s; }
+    .quick-action:nth-child(3) { animation-delay: 0.2s; }
+    .quick-action:nth-child(4) { animation-delay: 0.3s; }
+
+    .quick-action:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .quick-action:active {
+      transform: scale(0.98);
+    }
+
+    .quick-action-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .quick-action-icon.purple { background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); }
+    .quick-action-icon.green { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); }
+    .quick-action-icon.orange { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); }
+    .quick-action-icon.blue { background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); }
+    
+    .quick-action-icon svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+
+    .quick-action-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .quick-action-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: -8px;
+    }
+
+    /* Stats */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      padding: 0 16px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .stats-row::-webkit-scrollbar { display: none; }
+
+    .stat-chip {
+      background: var(--bg-glass);
+      backdrop-filter: blur(var(--blur));
+      border-radius: 50px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      animation: fadeInUp 0.5s ease;
+    }
+
+    .stat-chip-icon {
+      font-size: 16px;
+    }
+
+    .stat-chip-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-chip-label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Section */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .section-action {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Event Card */
+    .event-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(var(--blur));
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin: 0 16px 12px;
+      display: flex;
+      gap: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .event-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--accent);
+      border-radius: 4px 0 0 4px;
+    }
+
+    .event-card.category-work::before { background: var(--accent); }
+    .event-card.category-personal::before { background: var(--success); }
+    .event-card.category-health::before { background: var(--warning); }
+    .event-card.category-social::before { background: #ec4899; }
+
+    .event-card:hover {
+      transform: translateX(4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .event-card:active {
+      transform: scale(0.98);
+    }
+
+    .event-time-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 50px;
+      padding-right: 16px;
+      border-right: 1px solid var(--border);
+    }
+
+    .event-time {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .event-ampm {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .event-content {
+      flex: 1;
+    }
+
+    .event-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .event-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .event-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .event-badges {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .badge-repeat {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .badge-reminder {
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
+    .badge-google {
+      background: rgba(66, 133, 244, 0.1);
+      color: #4285f4;
+    }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 50;
+      animation: fabBounce 0.5s ease;
+    }
+
+    @keyframes fabBounce {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .fab:hover {
+      transform: scale(1.1) rotate(90deg);
+      box-shadow: 0 12px 32px rgba(99, 102, 241, 0.5);
+    }
+
+    .fab:active {
+      transform: scale(0.95);
+    }
+
+    /* Bottom Nav */
     .bottom-nav {
-      position: fixed; left: 0; right: 0; bottom: 0; max-width: 480px; margin: 0 auto;
-      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border); display: flex; justify-content: space-around;
-      padding: 12px 0 20px; z-index: 20;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--bg-glass-strong);
+      backdrop-filter: blur(var(--blur));
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0 28px;
+      z-index: 40;
     }
-    .nav-btn {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      font-size: 11px; font-weight: 500; color: var(--text-muted);
-      border: none; background: transparent; cursor: pointer;
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+      position: relative;
+      padding: 8px 20px;
     }
-    .nav-btn .nav-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-    .nav-btn.active { color: var(--primary); }
-    .nav-btn.active .nav-icon { background: var(--primary-soft); }
-    .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .calendar-title { font-size: 16px; font-weight: 600; }
-    .calendar-nav { display: flex; gap: 8px; }
-    .calendar-nav button { width: 32px; height: 32px; border-radius: 10px; border: none; background: var(--primary-soft); color: var(--primary); font-size: 14px; cursor: pointer; }
-    .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
-    .weekday { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 8px 0; }
-    .calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-    .day-cell { aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; cursor: pointer; border: 2px solid transparent; background: #f8fafc; }
-    .day-cell:hover { background: var(--primary-soft); }
-    .day-cell.other-month { color: #cbd5e1; background: transparent; }
-    .day-cell.today { border-color: var(--primary); color: var(--primary); font-weight: 700; }
-    .day-cell.selected { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-color: transparent; }
-    .day-cell.past { color: #cbd5e1; cursor: not-allowed; background: transparent; }
-    .time-section { margin-top: 20px; }
-    .time-section-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-    .time-period { margin-bottom: 16px; }
-    .time-period-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
-    .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .time-cell { padding: 12px 8px; border-radius: 12px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; background: #f8fafc; border: 2px solid transparent; }
-    .time-cell:hover { background: var(--primary-soft); }
-    .time-cell.selected { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; }
-    .selected-datetime { background: linear-gradient(135deg, var(--primary-soft) 0%, #f0e7ff 100%); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center; }
-    .selected-datetime .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
-    .selected-datetime .value { font-size: 18px; font-weight: 700; color: var(--primary); }
-    .section-title { font-size: 14px; font-weight: 600; margin: 20px 0 12px; display: flex; align-items: center; gap: 8px; }
-    .field { margin-bottom: 14px; }
-    .field label { display: block; font-size: 12px; font-weight: 500; margin-bottom: 6px; color: var(--text-muted); }
-    .field input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 2px solid var(--border); font-size: 15px; background: #fff; }
-    .field input:focus { outline: none; border-color: var(--primary); }
-    .empty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px; }
-    .empty-icon { font-size: 48px; margin-bottom: 12px; }
-    .meeting-card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); }
-    .meeting-card.google { border-left: 4px solid var(--google); }
-    .meeting-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-    .meeting-attendee { font-size: 13px; color: var(--text-muted); }
-    .meeting-time { display: flex; align-items: center; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
-    .pill { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-    .pill-scheduled { background: var(--primary-soft); color: var(--primary); }
-    .pill-google { background: #e8f0fe; color: var(--google); }
-    .pill-completed { background: var(--success-soft); color: var(--success); }
-    .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    .loading-dark { border-color: var(--primary); border-top-color: transparent; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; font-size: 14px; z-index: 100; display: none; }
-    .toast.show { display: block; animation: fadeIn 0.3s; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-    .sync-btn { background: none; border: none; color: var(--primary); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 4px; }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+
+    .nav-item.active .nav-icon-wrap {
+      background: var(--accent);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .nav-icon-wrap {
+      width: 44px;
+      height: 32px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .nav-icon {
+      width: 22px;
+      height: 22px;
+      transition: transform 0.2s ease;
+    }
+
+    .nav-item:active .nav-icon-wrap {
+      transform: scale(0.9);
+    }
+
+    .nav-label {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* Create Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.4s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      margin: 12px auto;
+    }
+
+    .modal-header {
+      padding: 8px 20px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-glass);
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+    }
+
+    .modal-body {
+      padding: 0 20px 40px;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--border);
+      background: var(--bg-primary);
+      font-size: 16px;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Category Picker */
+    .category-picker {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .category-option {
+      padding: 10px 16px;
+      border-radius: 50px;
+      border: 2px solid var(--border);
+      background: var(--bg-primary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .category-option:hover {
+      border-color: var(--accent);
+    }
+
+    .category-option.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* Date/Time Picker */
+    .datetime-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .datetime-btn {
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--border);
+      background: var(--bg-primary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .datetime-btn:hover {
+      border-color: var(--accent);
+    }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: var(--bg-primary);
+      border-radius: var(--radius-md);
+      margin-bottom: 12px;
+    }
+
+    .toggle-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toggle-icon {
+      font-size: 20px;
+    }
+
+    .toggle-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .toggle-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .toggle {
+      width: 52px;
+      height: 28px;
+      border-radius: 28px;
+      background: var(--border);
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .toggle.active {
+      background: var(--accent);
+    }
+
+    .toggle.active::after {
+      transform: translateX(24px);
+    }
+
+    /* Primary Button */
+    .btn-primary {
+      width: 100%;
+      padding: 18px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 40px;
+      animation: fadeInUp 0.5s ease;
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .empty-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .empty-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* Calendar Screen */
+    .calendar-container {
+      padding: 0 16px;
+    }
+
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .calendar-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .calendar-nav {
+      display: flex;
+      gap: 8px;
+    }
+
+    .calendar-nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--bg-glass);
+      color: var(--text-secondary);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .calendar-nav-btn:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .calendar-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 8px;
+    }
+
+    .weekday {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 8px 0;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .calendar-day:hover {
+      background: var(--accent-soft);
+    }
+
+    .calendar-day.other-month {
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    .calendar-day.today {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .calendar-day.selected {
+      background: var(--accent);
+      color: white;
+    }
+
+    .calendar-day.has-events::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .calendar-day.selected.has-events::after {
+      background: white;
+    }
+
+    /* Settings */
+    .settings-section {
+      margin: 0 16px 24px;
+    }
+
+    .settings-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .settings-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(var(--blur));
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+
+    .settings-item:hover {
+      background: var(--accent-soft);
+    }
+
+    .settings-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .settings-item-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .settings-item-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent);
+    }
+
+    .settings-item-text {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .settings-item-value {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Swipe hint */
+    .swipe-hint {
+      text-align: center;
+      padding: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      animation: fadeIn 1s ease;
+    }
   </style>
 </head>
-<body>
-<div id="toast" class="toast"></div>
-<div class="app">
-  <header class="app-header">
-    <div class="app-title">📅 CalendarBot</div>
-    <div class="app-subtitle">Schedule meetings with ease</div>
-  </header>
-
-  <section id="screen-home" class="screen active">
-    <div class="card" id="google-connect-card" style="background: linear-gradient(135deg, #4285f4 0%, #34a853 100%); color: white;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="font-size: 32px;">📅</div>
-        <div style="flex: 1;">
-          <div style="font-weight: 600; font-size: 15px;">Connect Google Calendar</div>
-          <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">Sync your events automatically</div>
+<body data-theme="light">
+  <div class="bg-gradient"></div>
+  
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
         </div>
+        <span class="logo-text">CalendarBot</span>
       </div>
-      <button class="btn" onclick="connectGoogleCalendar()" style="margin-top: 14px; background: white; color: #4285f4;">
-        🔗 Connect Now
-      </button>
-    </div>
-
-    <div class="card" id="google-connected-card" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); display: none;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="font-size: 28px;">✅</div>
-        <div style="flex: 1;">
-          <div style="font-weight: 600; font-size: 14px; color: #065f46;">Google Calendar Connected</div>
-          <div style="font-size: 12px; color: #047857; margin-top: 2px;">Your events are synced</div>
-        </div>
-        <button onclick="disconnectGoogle()" style="background: none; border: none; color: #dc2626; font-size: 12px; cursor: pointer;">Disconnect</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="row">
-        <div>
-          <div id="home-date" style="font-size:13px;color:var(--text-muted);"></div>
-          <h2 style="margin-top:4px;font-size:20px;font-weight:700;">Today</h2>
-        </div>
-        <button class="btn btn-sm" style="width:auto;" onclick="openCreate()">✨ New Meeting</button>
-      </div>
-      <div class="stats">
-        <div class="stat-card">
-          <div class="stat-icon today">📌</div>
-          <div class="stat-label">Today</div>
-          <div class="stat-value" id="stat-today">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon upcoming">🗓</div>
-          <div class="stat-label">Upcoming</div>
-          <div class="stat-value" id="stat-upcoming">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon completed">✅</div>
-          <div class="stat-label">Done</div>
-          <div class="stat-value" id="stat-completed">0</div>
-        </div>
-      </div>
-    </div>
-
-    <div style="margin-top:8px;">
-      <div class="section-header">
-        <div style="font-size:16px;font-weight:600;">📋 Upcoming</div>
-        <button class="sync-btn" onclick="syncGoogleEvents()" id="sync-btn">
-          🔄 Sync
+      <div class="header-actions">
+        <button class="icon-btn" onclick="syncEvents()" id="sync-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        </button>
+        <button class="icon-btn" onclick="toggleTheme()" id="theme-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
       </div>
-      <div id="home-meetings"></div>
-    </div>
-  </section>
+    </header>
 
-  <section id="screen-meetings" class="screen">
-    <div class="section-header">
-      <div style="font-size:18px;font-weight:700;">All Meetings</div>
-      <button class="sync-btn" onclick="syncGoogleEvents()">🔄 Sync</button>
-    </div>
-    <div id="list-meetings"></div>
-  </section>
-
-  <section id="screen-create" class="screen">
-    <div class="card">
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:4px;">📝 New Meeting</h2>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Pick a date and time</p>
-
-      <div class="selected-datetime">
-        <div class="label">Selected</div>
-        <div class="value" id="selected-display">Choose date & time</div>
-      </div>
-
-      <div class="calendar-header">
-        <div class="calendar-title" id="calendar-month-title">January 2026</div>
-        <div class="calendar-nav">
-          <button onclick="prevMonth()">←</button>
-          <button onclick="nextMonth()">→</button>
+    <!-- Home Screen -->
+    <section id="screen-home" class="screen active">
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-chip">
+          <span class="stat-chip-icon">📌</span>
+          <span class="stat-chip-value">3</span>
+          <span class="stat-chip-label">Today</span>
         </div>
-      </div>
-      <div class="calendar-weekdays">
-        <div class="weekday">Mon</div><div class="weekday">Tue</div><div class="weekday">Wed</div>
-        <div class="weekday">Thu</div><div class="weekday">Fri</div><div class="weekday">Sat</div><div class="weekday">Sun</div>
-      </div>
-      <div class="calendar-days" id="calendar-days"></div>
-
-      <div class="time-section">
-        <div class="time-section-title"><span>🕐</span> Select Time</div>
-        <div class="time-period">
-          <div class="time-period-label">Morning</div>
-          <div class="time-grid" id="times-morning"></div>
+        <div class="stat-chip">
+          <span class="stat-chip-icon">🗓</span>
+          <span class="stat-chip-value">12</span>
+          <span class="stat-chip-label">This week</span>
         </div>
-        <div class="time-period">
-          <div class="time-period-label">Afternoon</div>
-          <div class="time-grid" id="times-afternoon"></div>
-        </div>
-        <div class="time-period">
-          <div class="time-period-label">Evening</div>
-          <div class="time-grid" id="times-evening"></div>
+        <div class="stat-chip">
+          <span class="stat-chip-icon">✅</span>
+          <span class="stat-chip-value">28</span>
+          <span class="stat-chip-label">Completed</span>
         </div>
       </div>
 
-      <div class="section-title"><span>✏️</span> Details</div>
-      <div class="field">
-        <label>Meeting Title</label>
-        <input id="input-title" type="text" placeholder="Team standup, 1:1 with Alex..." />
-      </div>
-      <div class="field">
-        <label>Attendee Email (optional)</label>
-        <input id="input-attendee" type="email" placeholder="colleague@company.com" />
-      </div>
-      <div class="field">
-        <label>Duration (minutes)</label>
-        <input id="input-duration" type="number" value="30" placeholder="Minutes" />
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <div class="quick-action" onclick="openCreateModal()">
+          <div class="quick-action-icon purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </div>
+          <span class="quick-action-text">New Event</span>
+          <span class="quick-action-sub">Create quickly</span>
+        </div>
+        <div class="quick-action" onclick="switchScreen('calendar')">
+          <div class="quick-action-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+          <span class="quick-action-text">Calendar</span>
+          <span class="quick-action-sub">View all dates</span>
+        </div>
+        <div class="quick-action" onclick="connectGoogle()">
+          <div class="quick-action-icon blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          </div>
+          <span class="quick-action-text">Google Sync</span>
+          <span class="quick-action-sub">Connect account</span>
+        </div>
+        <div class="quick-action" onclick="switchScreen('settings')">
+          <div class="quick-action-icon orange">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </div>
+          <span class="quick-action-text">Settings</span>
+          <span class="quick-action-sub">Customize app</span>
+        </div>
       </div>
 
-      <button class="btn" id="create-btn" onclick="createMeeting()" style="margin-top:8px;">
-        🚀 Create Meeting
+      <!-- Upcoming Events -->
+      <div class="section-header">
+        <h2 class="section-title">Upcoming</h2>
+        <button class="section-action">See all →</button>
+      </div>
+
+      <div class="event-card category-work">
+        <div class="event-time-block">
+          <span class="event-time">10:00</span>
+          <span class="event-ampm">AM</span>
+        </div>
+        <div class="event-content">
+          <div class="event-title">Team Standup</div>
+          <div class="event-meta">
+            <span class="event-meta-item">⏱ 30 min</span>
+            <span class="event-meta-item">👥 5 people</span>
+          </div>
+          <div class="event-badges">
+            <span class="badge badge-repeat">🔄 Daily</span>
+            <span class="badge badge-reminder">🔔 15 min</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-card category-personal">
+        <div class="event-time-block">
+          <span class="event-time">2:00</span>
+          <span class="event-ampm">PM</span>
+        </div>
+        <div class="event-content">
+          <div class="event-title">Lunch with Alex</div>
+          <div class="event-meta">
+            <span class="event-meta-item">⏱ 60 min</span>
+            <span class="event-meta-item">📍 Cafe Milano</span>
+          </div>
+          <div class="event-badges">
+            <span class="badge badge-google">📅 Google</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-card category-health">
+        <div class="event-time-block">
+          <span class="event-time">6:00</span>
+          <span class="event-ampm">PM</span>
+        </div>
+        <div class="event-content">
+          <div class="event-title">Gym Session</div>
+          <div class="event-meta">
+            <span class="event-meta-item">⏱ 90 min</span>
+            <span class="event-meta-item">📍 FitLife Gym</span>
+          </div>
+          <div class="event-badges">
+            <span class="badge badge-repeat">🔄 Mon, Wed, Fri</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="swipe-hint">← Swipe to complete or delete →</p>
+    </section>
+
+    <!-- Calendar Screen -->
+    <section id="screen-calendar" class="screen">
+      <div class="calendar-container">
+        <div class="glass-card" style="margin: 0 0 16px;">
+          <div class="calendar-header">
+            <h2 class="calendar-title">February 2026</h2>
+            <div class="calendar-nav">
+              <button class="calendar-nav-btn">←</button>
+              <button class="calendar-nav-btn">→</button>
+            </div>
+          </div>
+          <div class="calendar-weekdays">
+            <span class="weekday">Mon</span>
+            <span class="weekday">Tue</span>
+            <span class="weekday">Wed</span>
+            <span class="weekday">Thu</span>
+            <span class="weekday">Fri</span>
+            <span class="weekday">Sat</span>
+            <span class="weekday">Sun</span>
+          </div>
+          <div class="calendar-grid">
+            <button class="calendar-day other-month">26</button>
+            <button class="calendar-day other-month">27</button>
+            <button class="calendar-day other-month">28</button>
+            <button class="calendar-day other-month">29</button>
+            <button class="calendar-day other-month">30</button>
+            <button class="calendar-day other-month">31</button>
+            <button class="calendar-day">1</button>
+            <button class="calendar-day has-events">2</button>
+            <button class="calendar-day">3</button>
+            <button class="calendar-day has-events">4</button>
+            <button class="calendar-day">5</button>
+            <button class="calendar-day">6</button>
+            <button class="calendar-day">7</button>
+            <button class="calendar-day">8</button>
+            <button class="calendar-day has-events">9</button>
+            <button class="calendar-day">10</button>
+            <button class="calendar-day">11</button>
+            <button class="calendar-day">12</button>
+            <button class="calendar-day">13</button>
+            <button class="calendar-day">14</button>
+            <button class="calendar-day">15</button>
+            <button class="calendar-day">16</button>
+            <button class="calendar-day">17</button>
+            <button class="calendar-day">18</button>
+            <button class="calendar-day">19</button>
+            <button class="calendar-day">20</button>
+            <button class="calendar-day">21</button>
+            <button class="calendar-day">22</button>
+            <button class="calendar-day today has-events">23</button>
+            <button class="calendar-day">24</button>
+            <button class="calendar-day">25</button>
+            <button class="calendar-day">26</button>
+            <button class="calendar-day">27</button>
+            <button class="calendar-day">28</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Today's Events</h2>
+      </div>
+
+      <div class="event-card category-work">
+        <div class="event-time-block">
+          <span class="event-time">10:00</span>
+          <span class="event-ampm">AM</span>
+        </div>
+        <div class="event-content">
+          <div class="event-title">Team Standup</div>
+          <div class="event-meta">
+            <span class="event-meta-item">⏱ 30 min</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings Screen -->
+    <section id="screen-settings" class="screen">
+      <div class="settings-section">
+        <h3 class="settings-title">Appearance</h3>
+        <div class="settings-card">
+          <div class="settings-item" onclick="toggleTheme()">
+            <div class="settings-item-left">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              </div>
+              <span class="settings-item-text">Dark Mode</span>
+            </div>
+            <button class="toggle" id="theme-toggle"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="settings-title">Integrations</h3>
+        <div class="settings-card">
+          <div class="settings-item" onclick="connectGoogle()">
+            <div class="settings-item-left">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              </div>
+              <span class="settings-item-text">Google Calendar</span>
+            </div>
+            <span class="settings-item-value">Connect →</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="settings-title">Notifications</h3>
+        <div class="settings-card">
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              </div>
+              <span class="settings-item-text">Reminders</span>
+            </div>
+            <button class="toggle active"></button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              </div>
+              <span class="settings-item-text">Email Notifications</span>
+            </div>
+            <button class="toggle"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="settings-title">Default Settings</h3>
+        <div class="settings-card">
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <span class="settings-item-text">Default Duration</span>
+            </div>
+            <span class="settings-item-value">30 min</span>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              </div>
+              <span class="settings-item-text">Default Reminder</span>
+            </div>
+            <span class="settings-item-value">15 min before</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAB -->
+    <button class="fab" onclick="openCreateModal()">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </button>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="switchScreen('home')">
+        <div class="nav-icon-wrap">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </div>
+        <span class="nav-label">Home</span>
       </button>
-      <button class="btn btn-outline" style="margin-top:10px;" onclick="openHome()">Cancel</button>
+      <button class="nav-item" onclick="switchScreen('calendar')">
+        <div class="nav-icon-wrap">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </div>
+        <span class="nav-label">Calendar</span>
+      </button>
+      <button class="nav-item" onclick="switchScreen('settings')">
+        <div class="nav-icon-wrap">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </div>
+        <span class="nav-label">Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Create Modal -->
+  <div class="modal-overlay" id="create-modal">
+    <div class="modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">New Event</h2>
+        <button class="modal-close" onclick="closeCreateModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Event Title</label>
+          <input type="text" class="form-input" placeholder="What's happening?">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <div class="category-picker">
+            <button class="category-option active">💼 Work</button>
+            <button class="category-option">👤 Personal</button>
+            <button class="category-option">💪 Health</button>
+            <button class="category-option">🎉 Social</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Date & Time</label>
+          <div class="datetime-row">
+            <button class="datetime-btn">📅 Today</button>
+            <button class="datetime-btn">🕐 10:00 AM</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Duration</label>
+          <div class="category-picker">
+            <button class="category-option">15 min</button>
+            <button class="category-option active">30 min</button>
+            <button class="category-option">1 hour</button>
+            <button class="category-option">2 hours</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-icon">🔄</span>
+              <div>
+                <div class="toggle-text">Repeat</div>
+                <div class="toggle-sub">Make this a recurring event</div>
+              </div>
+            </div>
+            <button class="toggle" onclick="this.classList.toggle('active')"></button>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-icon">🔔</span>
+              <div>
+                <div class="toggle-text">Reminder</div>
+                <div class="toggle-sub">15 minutes before</div>
+              </div>
+            </div>
+            <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+          </div>
+        </div>
+
+        <button class="btn-primary">
+          ✨ Create Event
+        </button>
+      </div>
     </div>
-  </section>
-</div>
+  </div>
 
-<nav class="bottom-nav">
-  <button class="nav-btn active" onclick="switchScreen('home')" id="nav-home">
-    <div class="nav-icon">🏠</div><span>Home</span>
-  </button>
-  <button class="nav-btn" onclick="switchScreen('create')" id="nav-create">
-    <div class="nav-icon">➕</div><span>Create</span>
-  </button>
-  <button class="nav-btn" onclick="switchScreen('meetings')" id="nav-meetings">
-    <div class="nav-icon">📋</div><span>Meetings</span>
-  </button>
-</nav>
-
-<script>
-  const tg = window.Telegram?.WebApp;
-  if (tg) { tg.expand(); tg.ready(); }
-
-  const API_URL = 'https://calendar-miniapp.onrender.com';
-  
-  // Хранилище событий Google Calendar
-  let googleEvents = [];
-
-  function getUserId() {
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      return String(tg.initDataUnsafe.user.id);
-    }
-    let id = localStorage.getItem('user_id');
-    if (!id) {
-      id = 'web_' + Date.now();
-      localStorage.setItem('user_id', id);
-    }
-    return id;
-  }
-
-  function showToast(message, duration = 3000) {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), duration);
-  }
-
-  // Google Calendar
-  function checkGoogleConnection() {
-    const connected = localStorage.getItem('google_connected') === 'true';
-    document.getElementById('google-connect-card').style.display = connected ? 'none' : 'block';
-    document.getElementById('google-connected-card').style.display = connected ? 'block' : 'none';
-    return connected;
-  }
-
-  function connectGoogleCalendar() {
-    const userId = getUserId();
-    const authUrl = `${API_URL}/auth/google?user_id=${userId}&chat_id=${userId}`;
-    
-    if (tg) {
-      tg.openLink(authUrl);
-    } else {
-      window.open(authUrl, '_blank');
-    }
-    
-    localStorage.setItem('google_connected', 'true');
-    setTimeout(() => {
-      checkGoogleConnection();
-      syncGoogleEvents();
-    }, 2000);
-  }
-
-  function disconnectGoogle() {
-    localStorage.removeItem('google_connected');
-    googleEvents = [];
-    checkGoogleConnection();
-    renderHome();
-    showToast('Google Calendar disconnected');
-  }
-
-  // Синхронизация с Google Calendar
-  async function syncGoogleEvents() {
-    if (!checkGoogleConnection()) {
-      showToast('Connect Google Calendar first');
-      return;
-    }
-
-    const syncBtn = document.getElementById('sync-btn');
-    if (syncBtn) {
-      syncBtn.innerHTML = '<span class="loading loading-dark"></span> Syncing...';
-      syncBtn.disabled = true;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/get_events?user_id=${getUserId()}`);
-      const data = await response.json();
-
-      if (response.status === 401) {
-        localStorage.removeItem('google_connected');
-        checkGoogleConnection();
-        showToast('Please reconnect Google Calendar');
-        googleEvents = [];
-      } else if (data.events) {
-        googleEvents = data.events.map(e => ({
-          id: e.id,
-          title: e.summary || 'No title',
-          datetime: e.start?.dateTime || e.start?.date,
-          duration: calculateDuration(e.start, e.end),
-          attendee: e.attendees?.[0]?.email || '',
-          status: 'google',
-          htmlLink: e.htmlLink
-        }));
-        showToast(`✅ Synced ${googleEvents.length} events`);
-      }
-    } catch (e) {
-      console.error('Sync error:', e);
-      showToast('Sync failed. Try again.');
-    }
-
-    if (syncBtn) {
-      syncBtn.innerHTML = '🔄 Sync';
-      syncBtn.disabled = false;
-    }
-
-    renderHome();
-    renderMeetings();
-  }
-
-  function calculateDuration(start, end) {
-    if (!start?.dateTime || !end?.dateTime) return 60;
-    const startDate = new Date(start.dateTime);
-    const endDate = new Date(end.dateTime);
-    return Math.round((endDate - startDate) / 60000);
-  }
-
-  // Meetings
-  function loadMeetings() {
-    try { return JSON.parse(localStorage.getItem('meetings') || '[]'); }
-    catch { return []; }
-  }
-
-  function saveMeetings(list) {
-    localStorage.setItem('meetings', JSON.stringify(list));
-  }
-
-  function getAllMeetings() {
-    const local = loadMeetings();
-    // Объединяем локальные и Google события
-    const all = [...local, ...googleEvents];
-    return all;
-  }
-
-  // Navigation
-  function switchScreen(name) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(`screen-${name}`).classList.add('active');
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`nav-${name}`).classList.add('active');
-    if (name === 'home') renderHome();
-    if (name === 'meetings') renderMeetings();
-    if (name === 'create') initCalendar();
-  }
-
-  function openCreate() { switchScreen('create'); }
-  function openHome() { switchScreen('home'); }
-
-  // Calendar
-  let currentMonth = new Date();
-  let selectedDate = null;
-  let selectedTime = null;
-
-  function initCalendar() {
-    renderCalendar();
-    renderTimeSlots();
-    updateSelectedDisplay();
-  }
-
-  function renderCalendar() {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    document.getElementById('calendar-month-title').textContent = `${monthNames[month]} ${year}`;
-    
-    const container = document.getElementById('calendar-days');
-    container.innerHTML = '';
-    
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    let startDay = firstDay.getDay() - 1;
-    if (startDay < 0) startDay = 6;
-    
-    const prevMonthLast = new Date(year, month, 0).getDate();
-    for (let i = startDay - 1; i >= 0; i--) {
-      const cell = document.createElement('div');
-      cell.className = 'day-cell other-month';
-      cell.textContent = prevMonthLast - i;
-      container.appendChild(cell);
-    }
-    
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-      const cell = document.createElement('div');
-      const cellDate = new Date(year, month, day);
-      const iso = cellDate.toISOString().slice(0, 10);
+  <script>
+    // Theme
+    function toggleTheme() {
+      const body = document.body;
+      const isDark = body.getAttribute('data-theme') === 'dark';
+      body.setAttribute('data-theme', isDark ? 'light' : 'dark');
       
-      cell.className = 'day-cell';
-      cell.textContent = day;
-      cell.dataset.date = iso;
-      
-      if (cellDate < today) {
-        cell.classList.add('past');
-      } else {
-        if (cellDate.toDateString() === today.toDateString()) cell.classList.add('today');
-        if (selectedDate === iso) cell.classList.add('selected');
-        cell.onclick = () => selectDate(iso);
+      const themeToggle = document.getElementById('theme-toggle');
+      if (themeToggle) {
+        themeToggle.classList.toggle('active', !isDark);
       }
-      container.appendChild(cell);
+      
+      // Update icon
+      const themeBtn = document.getElementById('theme-btn');
+      if (themeBtn) {
+        themeBtn.innerHTML = isDark 
+          ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>'
+          : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+      }
+      
+      localStorage.setItem('theme', isDark ? 'light' : 'dark');
     }
-    
-    const totalCells = container.children.length;
-    for (let i = 1; totalCells + i <= 42; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'day-cell other-month';
-      cell.textContent = i;
-      container.appendChild(cell);
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', savedTheme);
+    if (savedTheme === 'dark') {
+      const themeToggle = document.getElementById('theme-toggle');
+      if (themeToggle) themeToggle.classList.add('active');
+      const themeBtn = document.getElementById('theme-btn');
+      if (themeBtn) {
+        themeBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+      }
     }
-  }
 
-  function selectDate(iso) {
-    selectedDate = iso;
-    document.querySelectorAll('.day-cell').forEach(c => c.classList.remove('selected'));
-    document.querySelector(`.day-cell[data-date="${iso}"]`)?.classList.add('selected');
-    updateSelectedDisplay();
-  }
+    // Screen navigation
+    function switchScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(`screen-${name}`).classList.add('active');
+      
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      event.currentTarget?.classList.add('active');
+    }
 
-  function prevMonth() { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); }
-  function nextMonth() { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); }
+    // Modal
+    function openCreateModal() {
+      document.getElementById('create-modal').classList.add('active');
+    }
 
-  function renderTimeSlots() {
-    const morning = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30'];
-    const afternoon = ['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30'];
-    const evening = ['16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'];
-    renderTimeGrid('times-morning', morning);
-    renderTimeGrid('times-afternoon', afternoon);
-    renderTimeGrid('times-evening', evening);
-  }
+    function closeCreateModal() {
+      document.getElementById('create-modal').classList.remove('active');
+    }
 
-  function renderTimeGrid(containerId, times) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = '';
-    times.forEach(time => {
-      const cell = document.createElement('div');
-      cell.className = 'time-cell';
-      cell.textContent = time;
-      cell.dataset.time = time;
-      if (selectedTime === time) cell.classList.add('selected');
-      cell.onclick = () => selectTime(time);
-      container.appendChild(cell);
+    // Close modal on overlay click
+    document.getElementById('create-modal').addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) {
+        closeCreateModal();
+      }
     });
-  }
 
-  function selectTime(time) {
-    selectedTime = time;
-    document.querySelectorAll('.time-cell').forEach(c => c.classList.remove('selected'));
-    document.querySelector(`.time-cell[data-time="${time}"]`)?.classList.add('selected');
-    updateSelectedDisplay();
-  }
-
-  function updateSelectedDisplay() {
-    const el = document.getElementById('selected-display');
-    if (!selectedDate && !selectedTime) { el.textContent = 'Choose date & time'; return; }
-    let text = '';
-    if (selectedDate) {
-      const d = new Date(selectedDate);
-      text = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-    }
-    if (selectedTime) text += text ? ` at ${selectedTime}` : selectedTime;
-    el.textContent = text || 'Choose date & time';
-  }
-
-  // Create meeting
-  async function createMeeting() {
-    const title = document.getElementById('input-title').value.trim() || 'Meeting';
-    const attendee = document.getElementById('input-attendee').value.trim();
-    const duration = parseInt(document.getElementById('input-duration').value, 10) || 30;
-
-    if (!selectedDate || !selectedTime) {
-      showToast('Please select date and time');
-      return;
-    }
-
-    const btn = document.getElementById('create-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading"></span> Creating...';
-
-    const meetingData = {
-      user_id: getUserId(),
-      title,
-      attendee,
-      duration,
-      datetime: `${selectedDate}T${selectedTime}:00`
-    };
-
-    // Отправляем в Google Calendar
-    if (localStorage.getItem('google_connected') === 'true') {
-      try {
-        const response = await fetch(`${API_URL}/create_event`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(meetingData)
-        });
-        const result = await response.json();
-        
-        if (result.success) {
-          showToast('✅ Added to Google Calendar!');
-          // Синхронизируем чтобы получить новое событие
-          await syncGoogleEvents();
-        } else if (result.error) {
-          console.error('Google Calendar error:', result.error);
-          if (response.status === 401) {
-            localStorage.removeItem('google_connected');
-            checkGoogleConnection();
-            showToast('Please reconnect Google Calendar');
-          } else {
-            // Сохраняем локально если Google не работает
-            saveLocalMeeting(meetingData);
-            showToast('Saved locally (Google sync failed)');
-          }
+    // Category picker
+    document.querySelectorAll('.category-picker').forEach(picker => {
+      picker.addEventListener('click', (e) => {
+        if (e.target.classList.contains('category-option')) {
+          picker.querySelectorAll('.category-option').forEach(opt => opt.classList.remove('active'));
+          e.target.classList.add('active');
         }
-      } catch (e) {
-        console.error('Network error:', e);
-        saveLocalMeeting(meetingData);
-        showToast('Saved locally (offline)');
-      }
-    } else {
-      saveLocalMeeting(meetingData);
-      showToast('✅ Meeting created locally!');
-    }
-
-    // Reset form
-    btn.disabled = false;
-    btn.innerHTML = '🚀 Create Meeting';
-    document.getElementById('input-title').value = '';
-    document.getElementById('input-attendee').value = '';
-    document.getElementById('input-duration').value = '30';
-    selectedDate = null;
-    selectedTime = null;
-
-    switchScreen('home');
-  }
-
-  function saveLocalMeeting(meetingData) {
-    const list = loadMeetings();
-    list.push({ id: Date.now(), ...meetingData, status: 'scheduled' });
-    saveMeetings(list);
-  }
-
-  // Render screens
-  function renderHome() {
-    checkGoogleConnection();
-    const all = getAllMeetings();
-    const today = new Date();
-    
-    document.getElementById('home-date').textContent = today.toLocaleDateString(undefined, {
-      weekday: 'long', month: 'long', day: 'numeric'
+      });
     });
 
-    let todayCount = 0, upcomingCount = 0, completedCount = 0;
-    const now = new Date();
-    
-    all.forEach(m => {
-      const d = new Date(m.datetime);
-      if (m.status === 'completed') completedCount++;
-      else if (d.toDateString() === now.toDateString()) todayCount++;
-      else if (d > now) upcomingCount++;
+    // Sync events
+    function syncEvents() {
+      const btn = document.querySelector('.header-actions .icon-btn');
+      btn.style.animation = 'spin 1s linear';
+      setTimeout(() => {
+        btn.style.animation = '';
+        alert('Events synced!');
+      }, 1000);
+    }
+
+    // Connect Google
+    function connectGoogle() {
+      alert('Connecting to Google Calendar...');
+    }
+
+    // Touch gestures for event cards
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.querySelectorAll('.event-card').forEach(card => {
+      card.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+      });
+
+      card.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe(card);
+      });
     });
-    
-    document.getElementById('stat-today').textContent = todayCount;
-    document.getElementById('stat-upcoming').textContent = upcomingCount;
-    document.getElementById('stat-completed').textContent = completedCount;
 
-    const cont = document.getElementById('home-meetings');
-    cont.innerHTML = '';
-    
-    const upcoming = all
-      .filter(m => new Date(m.datetime) >= now && m.status !== 'completed')
-      .sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
-      .slice(0, 10);
-
-    if (upcoming.length === 0) {
-      cont.innerHTML = `
-        <div class="card empty">
-          <div class="empty-icon">📭</div>
-          <div>No upcoming meetings</div>
-          <button class="btn btn-sm" style="width:auto;margin-top:16px;" onclick="openCreate()">Schedule one now</button>
-        </div>
-      `;
-      return;
-    }
-    
-    upcoming.forEach(m => cont.appendChild(createMeetingCard(m)));
-  }
-
-  function renderMeetings() {
-    const all = getAllMeetings().sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-    const cont = document.getElementById('list-meetings');
-    cont.innerHTML = '';
-    
-    if (all.length === 0) {
-      cont.innerHTML = '<div class="card empty"><div class="empty-icon">📋</div><div>No meetings yet</div></div>';
-      return;
-    }
-    
-    all.forEach(m => cont.appendChild(createMeetingCard(m, true)));
-  }
-
-  function createMeetingCard(m, withActions = false) {
-    const d = new Date(m.datetime);
-    const isGoogle = m.status === 'google';
-    const card = document.createElement('div');
-    card.className = 'meeting-card' + (isGoogle ? ' google' : '');
-    
-    let pillClass = 'pill-scheduled';
-    let pillText = '📅 Scheduled';
-    if (m.status === 'completed') {
-      pillClass = 'pill-completed';
-      pillText = '✓ Done';
-    } else if (isGoogle) {
-      pillClass = 'pill-google';
-      pillText = '📅 Google';
-    }
-    
-    card.innerHTML = `
-      <div class="row">
-        <div>
-          <div class="meeting-title">${m.title}</div>
-          ${m.attendee ? `<div class="meeting-attendee">with ${m.attendee}</div>` : ''}
-        </div>
-        <span class="pill ${pillClass}">${pillText}</span>
-      </div>
-      <div class="meeting-time">
-        <span>🗓 ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-        <span>·</span>
-        <span>🕐 ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
-        <span>·</span>
-        <span>⏱ ${m.duration || 30}min</span>
-      </div>
-    `;
-    
-    if (withActions && !isGoogle) {
-      const actions = document.createElement('div');
-      actions.style.cssText = 'display:flex;gap:8px;margin-top:12px;';
-      
-      if (m.status !== 'completed') {
-        const btnDone = document.createElement('button');
-        btnDone.className = 'btn btn-outline btn-sm';
-        btnDone.innerHTML = '✓ Complete';
-        btnDone.onclick = () => {
-          const list = loadMeetings();
-          const idx = list.findIndex(x => x.id === m.id);
-          if (idx >= 0) { list[idx].status = 'completed'; saveMeetings(list); renderMeetings(); }
-        };
-        actions.appendChild(btnDone);
+    function handleSwipe(card) {
+      const diff = touchEndX - touchStartX;
+      if (diff > 100) {
+        // Swipe right - complete
+        card.style.transform = 'translateX(100%)';
+        card.style.opacity = '0';
+        setTimeout(() => card.remove(), 300);
+      } else if (diff < -100) {
+        // Swipe left - delete
+        card.style.transform = 'translateX(-100%)';
+        card.style.opacity = '0';
+        setTimeout(() => card.remove(), 300);
       }
-      
-      const btnDelete = document.createElement('button');
-      btnDelete.className = 'btn btn-outline btn-sm';
-      btnDelete.innerHTML = '🗑 Delete';
-      btnDelete.onclick = () => {
-        saveMeetings(loadMeetings().filter(x => x.id !== m.id));
-        renderMeetings();
-        renderHome();
-      };
-      actions.appendChild(btnDelete);
-      card.appendChild(actions);
     }
-    
-    // Ссылка на Google Calendar для Google событий
-    if (isGoogle && m.htmlLink) {
-      const link = document.createElement('a');
-      link.href = m.htmlLink;
-      link.target = '_blank';
-      link.style.cssText = 'display:block;margin-top:12px;font-size:12px;color:var(--google);text-decoration:none;';
-      link.textContent = '↗ Open in Google Calendar';
-      card.appendChild(link);
-    }
-    
-    return card;
-  }
 
-  // Init
-  renderHome();
-  
-  // Автосинхронизация при загрузке если подключен Google
-  if (localStorage.getItem('google_connected') === 'true') {
-    setTimeout(syncGoogleEvents, 1000);
-  }
-</script>
+    // Telegram WebApp
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      tg.ready();
+      
+      // Match Telegram theme
+      if (tg.colorScheme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+      }
+    }
+  </script>
 </body>
 </html>
